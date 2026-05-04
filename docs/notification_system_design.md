@@ -70,3 +70,35 @@ Each notification document will have the following structure:
   "isRead": false,
   "createdAt": "2026-05-04T10:00:00Z"
 }
+```
+
+#  Stage 3 — Query Optimization
+
+##  Problem Statement
+
+The following query is slow:
+
+SELECT * FROM notifications
+WHERE studentID = 1042 AND isRead = false
+ORDER BY createdAt ASC;
+
+---
+
+##  Issues in the Query
+
+1. No indexing → full collection scan
+2. Sorting on large dataset is expensive
+3. Fetching all columns using SELECT * is inefficient
+
+---
+
+##  Optimization Strategy
+
+### 1. Create Composite Index
+
+In MongoDB:
+
+```js
+{ studentId: 1, isRead: 1, createdAt: -1 }
+```
+

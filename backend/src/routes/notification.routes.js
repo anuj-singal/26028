@@ -5,16 +5,34 @@ const Notification = require("../models/notification.model");
 //  GET notifications
 router.get("/", async (req, res) => {
   try {
-    const { studentId, page = 1, limit = 10 } = req.query;
+    let { studentId, isRead, page = 1, limit = 10 } = req.query;
 
-    const notifications = await Notification.find({ studentId })
-      .sort({ createdAt: -1 })
+    // Convert values properly
+    if (studentId) studentId = Number(studentId);
+    if (isRead !== undefined) isRead = isRead === "true";
+
+    // Build query object
+    const query = {};
+    if (studentId) query.studentId = studentId;
+    if (isRead !== undefined) query.isRead = isRead;
+
+    // Execute optimized query
+    const notifications = await Notification.find(query)
+      .select("studentId type message isRead createdAt") // projection
+      .sort({ createdAt: -1 }) // latest first
       .skip((page - 1) * limit)
       .limit(Number(limit));
+
+    const total = await Notification.countDocuments(query);
 
     res.status(200).json({
       success: true,
       data: notifications,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+      },
     });
   } catch (error) {
     res.status(500).json({
