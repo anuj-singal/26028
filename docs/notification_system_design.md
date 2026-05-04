@@ -203,3 +203,12 @@ Sending notifications to 50,000 users using a loop is slow and inefficient.
 ##  Result
 
 System can handle thousands of notifications efficiently without performance degradation
+
+
+## Stage 6 — Priority Inbox
+
+Priority is calculated using:
+- Type weight (Placement > Result > Event)
+- Recency (latest first)
+
+We compute a priority score and return top N unread notifications.

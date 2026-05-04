@@ -1,12 +1,14 @@
 const express = require("express");
 const router = express.Router();
+
 const Notification = require("../models/notification.model");
 const cache = require("../middlewares/cache");
 const { client } = require("../config/redis");
 const notificationQueue = require("../queue/notification.queue");
+const { getTopNotifications } = require("../utils/priority");
 
 
-//  GET notifications (with caching)
+// GET notifications (with caching)
 router.get("/", cache, async (req, res) => {
   try {
     let { studentId, isRead, page = 1, limit = 10 } = req.query;
@@ -43,16 +45,51 @@ router.get("/", cache, async (req, res) => {
   }
 });
 
-//stage 5
+
+// Stage 6: Priority notifications
+router.get("/priority", async (req, res) => {
+  try {
+    const { n = 10 } = req.query;
+
+    const notifications = await Notification.find();
+
+    const topNotifications = getTopNotifications(
+      notifications,
+      Number(n)
+    );
+
+    res.status(200).json({
+      success: true,
+      data: topNotifications,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+
+// Stage 5: Bulk notifications (queue-based)
 router.post("/bulk", async (req, res) => {
   try {
     const { students, message } = req.body;
 
-    for (let studentId of students) {
-      await notificationQueue.add("send_notification", {
-        studentId,
-        message,
+    if (!students || !Array.isArray(students)) {
+      return res.status(400).json({
+        success: false,
+        message: "students must be an array",
       });
+    }
+
+    for (let studentId of students) {
+      if (notificationQueue) {
+        await notificationQueue.add("send_notification", {
+          studentId,
+          message,
+        });
+      }
     }
 
     res.status(200).json({
@@ -67,7 +104,8 @@ router.post("/bulk", async (req, res) => {
   }
 });
 
-//  POST create notification
+
+// POST create notification
 router.post("/", async (req, res) => {
   try {
     const { studentId, type, message } = req.body;
@@ -78,8 +116,9 @@ router.post("/", async (req, res) => {
       message,
     });
 
-    //  Clear cache after write
-    await client.flushAll();
+    if (client.isOpen) {
+      await client.flushAll();
+    }
 
     res.status(201).json({
       success: true,
@@ -93,7 +132,8 @@ router.post("/", async (req, res) => {
   }
 });
 
-//  PATCH mark as read
+
+// PATCH mark as read
 router.patch("/:id/read", async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
@@ -108,8 +148,9 @@ router.patch("/:id/read", async (req, res) => {
     notification.isRead = true;
     await notification.save();
 
-    //  Clear cache
-    await client.flushAll();
+    if (client.isOpen) {
+      await client.flushAll();
+    }
 
     res.status(200).json({
       success: true,
@@ -123,13 +164,15 @@ router.patch("/:id/read", async (req, res) => {
   }
 });
 
-//  PATCH mark all as read
+
+// PATCH mark all as read
 router.patch("/read-all", async (req, res) => {
   try {
     await Notification.updateMany({}, { isRead: true });
 
-    //  Clear cache
-    await client.flushAll();
+    if (client.isOpen) {
+      await client.flushAll();
+    }
 
     res.status(200).json({
       success: true,
@@ -142,5 +185,6 @@ router.patch("/read-all", async (req, res) => {
     });
   }
 });
+
 
 module.exports = router;
