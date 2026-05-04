@@ -3,7 +3,7 @@ const app = express();
 
 app.use(express.json());
 
-const logger = require("./middleware/logger");
+const logger = require("./middlewares/logger");
 app.use(logger);
 
 app.use("/api/notifications", require("./routes/notification.routes"));
