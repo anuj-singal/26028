@@ -40,3 +40,27 @@ Using WebSockets (Socket.io)
 
 When notification created:
 emit event to user
+
+
+
+# Stage 2 — Database Design
+
+## DB Choice
+MongoDB (NoSQL)
+
+## Schema
+Notification:
+- studentId
+- type
+- message
+- isRead
+- createdAt
+
+## Scaling Issues
+- Large data
+- Slow queries
+
+## Solutions
+- Indexing
+- Pagination
+- Sharding
