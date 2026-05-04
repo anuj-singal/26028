@@ -102,14 +102,14 @@ In MongoDB:
 { studentId: 1, isRead: 1, createdAt: -1 }
 ```
 
-# ✅ Stage 4 — Performance Improvement
+#  Stage 4 — Performance Improvement
 
-## 🚨 Problem
+##  Problem
 Frequent database queries increase load and slow down system.
 
 ---
 
-## ⚡ Solution: Caching using Redis
+##  Solution: Caching using Redis
 
 - Cache frequently accessed notifications
 - Reduce database hits
@@ -117,7 +117,7 @@ Frequent database queries increase load and slow down system.
 
 ---
 
-## 🔄 Cache Strategy
+##  Cache Strategy
 
 - Cache GET requests for 60 seconds
 - Use request URL as cache key
@@ -125,7 +125,7 @@ Frequent database queries increase load and slow down system.
 
 ---
 
-## 🚀 Additional Improvements
+##  Additional Improvements
 
 ### 1. Pagination
 Avoid loading large datasets
@@ -141,8 +141,65 @@ Deploy multiple backend instances with load balancer
 
 ---
 
-## 🎯 Result
+##  Result
 
 - Faster API responses
 - Reduced database load
 - Scalable architecture
+
+#  Stage 5 — Notification System at Scale
+
+##  Problem
+
+Sending notifications to 50,000 users using a loop is slow and inefficient.
+
+---
+
+##  Bad Approach
+
+- Synchronous processing
+- Blocks server
+- High latency
+
+---
+
+##  Solution: Queue-Based Architecture
+
+###  Components
+
+1. Producer (API server)
+2. Queue (BullMQ / Kafka)
+3. Workers (process jobs asynchronously)
+
+---
+
+##  Flow
+
+1. API receives bulk request
+2. Adds jobs to queue
+3. Workers process jobs in parallel
+4. Notifications sent asynchronously
+
+---
+
+##  Benefits
+
+- Parallel processing
+- High scalability
+- Fault tolerance (retry failed jobs)
+- Non-blocking API
+
+---
+
+##  Advanced Improvements
+
+- Use Kafka for distributed systems
+- Add rate limiting
+- Use multiple workers for horizontal scaling
+- Integrate WebSockets for real-time delivery
+
+---
+
+##  Result
+
+System can handle thousands of notifications efficiently without performance degradation

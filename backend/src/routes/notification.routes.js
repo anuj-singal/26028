@@ -3,6 +3,8 @@ const router = express.Router();
 const Notification = require("../models/notification.model");
 const cache = require("../middlewares/cache");
 const { client } = require("../config/redis");
+const notificationQueue = require("../queue/notification.queue");
+
 
 //  GET notifications (with caching)
 router.get("/", cache, async (req, res) => {
@@ -32,6 +34,30 @@ router.get("/", cache, async (req, res) => {
         limit: Number(limit),
         total,
       },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+//stage 5
+router.post("/bulk", async (req, res) => {
+  try {
+    const { students, message } = req.body;
+
+    for (let studentId of students) {
+      await notificationQueue.add("send_notification", {
+        studentId,
+        message,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Notifications queued successfully",
     });
   } catch (error) {
     res.status(500).json({
