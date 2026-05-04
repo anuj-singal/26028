@@ -1,12 +1,13 @@
 const { createClient } = require("redis");
 
-const client = createClient();
+const client = createClient({
+  socket: {
+    reconnectStrategy: false, 
+  },
+});
 
-client.on("error", (err) => console.log("Redis Client Error", err));
+client.on("error", () => {
+  console.log("Redis not available, skipping...");
+});
 
-const connectRedis = async () => {
-  await client.connect();
-  console.log("Redis connected");
-};
-
-module.exports = { client, connectRedis };
+module.exports = { client };

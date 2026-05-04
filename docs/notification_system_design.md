@@ -212,3 +212,139 @@ Priority is calculated using:
 - Recency (latest first)
 
 We compute a priority score and return top N unread notifications.
+
+
+
+## Stage 7 — Frontend Implementation
+
+### Objective
+
+Build a responsive frontend application to:
+
+- Display all notifications
+- Display priority notifications
+- Filter notifications by type
+- Distinguish between read and unread notifications
+
+---
+
+### Technology Used
+
+- React (Create React App)
+- Axios (API calls)
+
+---
+
+### Application Structure
+
+frontend/
+  src/
+    App.js
+    api.js
+    components/
+      NotificationList.js
+      PriorityList.js
+
+---
+
+### Features Implemented
+
+#### 1. Display All Notifications
+
+- Fetch data from:
+  GET /api/notifications
+- Render list of notifications with:
+  - Type
+  - Message
+  - Read status
+
+---
+
+#### 2. Priority Notifications
+
+- Fetch from:
+  GET /api/notifications/priority?n=5
+- Display top N unread notifications based on:
+  - Type weight (Placement > Result > Event)
+  - Recency
+
+---
+
+#### 3. Filtering
+
+- Dropdown filter added:
+  - All
+  - Placement
+  - Result
+  - Event
+- Filters notifications on frontend
+
+---
+
+#### 4. Read vs Unread
+
+- Read notifications are visually differentiated
+- Based on `isRead` field
+
+---
+
+### API Integration
+
+Axios is used to call backend APIs:
+
+- GET /api/notifications
+- GET /api/notifications/priority
+
+Base URL:
+http://localhost:5000/api/notifications
+
+---
+
+### State Management
+
+- React `useState` used for:
+  - notifications
+  - priority notifications
+
+- React `useEffect` used to:
+  - Fetch data on component load
+
+---
+
+### Responsive Design
+
+- Application tested on:
+  - Desktop
+  - Mobile (browser resize)
+
+---
+
+### Output Screens
+
+Screenshots included:
+
+1. All notifications list
+2. Priority notifications
+3. Filter functionality
+4. Mobile view
+
+---
+
+### Video Demonstration
+
+A short video is recorded showing:
+
+- Loading notifications
+- Filtering
+- Priority section
+- Responsive UI
+
+---
+
+### Conclusion
+
+The frontend successfully integrates with backend APIs and provides:
+
+- Clean UI for notifications
+- Priority-based filtering
+- Responsive user experience

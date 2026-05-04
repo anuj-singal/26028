@@ -16,6 +16,9 @@ router.get("/", cache, async (req, res) => {
     if (studentId) studentId = Number(studentId);
     if (isRead !== undefined) isRead = isRead === "true";
 
+    page = Number(page);
+    limit = Number(limit);
+
     const query = {};
     if (studentId) query.studentId = studentId;
     if (isRead !== undefined) query.isRead = isRead;
@@ -24,7 +27,7 @@ router.get("/", cache, async (req, res) => {
       .select("studentId type message isRead createdAt")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(Number(limit));
+      .limit(limit);
 
     const total = await Notification.countDocuments(query);
 
@@ -32,8 +35,8 @@ router.get("/", cache, async (req, res) => {
       success: true,
       data: notifications,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page,
+        limit,
         total,
       },
     });
@@ -83,13 +86,26 @@ router.post("/bulk", async (req, res) => {
       });
     }
 
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        message: "message is required",
+      });
+    }
+
+    // If queue not available (Redis off), skip safely
+    if (!notificationQueue) {
+      return res.status(200).json({
+        success: true,
+        message: "Queue skipped (Redis not running)",
+      });
+    }
+
     for (let studentId of students) {
-      if (notificationQueue) {
-        await notificationQueue.add("send_notification", {
-          studentId,
-          message,
-        });
-      }
+      await notificationQueue.add("send_notification", {
+        studentId,
+        message,
+      });
     }
 
     res.status(200).json({
@@ -110,14 +126,22 @@ router.post("/", async (req, res) => {
   try {
     const { studentId, type, message } = req.body;
 
+    if (!studentId || !type || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "studentId, type and message are required",
+      });
+    }
+
     const notification = await Notification.create({
       studentId,
       type,
       message,
     });
 
-    if (client.isOpen) {
-      await client.flushAll();
+    // Clear cache only if Redis is active
+    if (client && client.isOpen) {
+      await client.flushAll().catch(() => {});
     }
 
     res.status(201).json({
@@ -148,8 +172,8 @@ router.patch("/:id/read", async (req, res) => {
     notification.isRead = true;
     await notification.save();
 
-    if (client.isOpen) {
-      await client.flushAll();
+    if (client && client.isOpen) {
+      await client.flushAll().catch(() => {});
     }
 
     res.status(200).json({
@@ -170,8 +194,8 @@ router.patch("/read-all", async (req, res) => {
   try {
     await Notification.updateMany({}, { isRead: true });
 
-    if (client.isOpen) {
-      await client.flushAll();
+    if (client && client.isOpen) {
+      await client.flushAll().catch(() => {});
     }
 
     res.status(200).json({
