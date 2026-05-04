@@ -43,24 +43,30 @@ emit event to user
 
 
 
-# Stage 2 — Database Design
+#  Stage 2 — Database Design
 
-## DB Choice
-MongoDB (NoSQL)
+## Database Choice
 
-## Schema
-Notification:
-- studentId
-- type
-- message
-- isRead
-- createdAt
+We use **MongoDB (NoSQL database)** for this system.
 
-## Scaling Issues
-- Large data
-- Slow queries
+###  Why MongoDB?
+- Handles large volumes of notifications efficiently
+- Flexible schema for different notification types
+- High write scalability (important for real-time systems)
+- Easy horizontal scaling using sharding
 
-## Solutions
-- Indexing
-- Pagination
-- Sharding
+---
+
+##  Notification Schema
+
+Each notification document will have the following structure:
+
+```json
+{
+  "_id": "ObjectId",
+  "studentId": 1042,
+  "type": "Event | Placement | Result",
+  "message": "Notification message",
+  "isRead": false,
+  "createdAt": "2026-05-04T10:00:00Z"
+}
