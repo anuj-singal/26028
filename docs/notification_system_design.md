@@ -102,3 +102,47 @@ In MongoDB:
 { studentId: 1, isRead: 1, createdAt: -1 }
 ```
 
+# ✅ Stage 4 — Performance Improvement
+
+## 🚨 Problem
+Frequent database queries increase load and slow down system.
+
+---
+
+## ⚡ Solution: Caching using Redis
+
+- Cache frequently accessed notifications
+- Reduce database hits
+- Improve response time
+
+---
+
+## 🔄 Cache Strategy
+
+- Cache GET requests for 60 seconds
+- Use request URL as cache key
+- Invalidate cache after POST/PATCH
+
+---
+
+## 🚀 Additional Improvements
+
+### 1. Pagination
+Avoid loading large datasets
+
+### 2. Read Replicas
+Separate read and write operations
+
+### 3. Background Jobs
+Process heavy tasks asynchronously
+
+### 4. Horizontal Scaling
+Deploy multiple backend instances with load balancer
+
+---
+
+## 🎯 Result
+
+- Faster API responses
+- Reduced database load
+- Scalable architecture

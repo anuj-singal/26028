@@ -1,25 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const Notification = require("../models/notification.model");
+const cache = require("../middlewares/cache");
+const { client } = require("../config/redis");
 
-//  GET notifications
-router.get("/", async (req, res) => {
+//  GET notifications (with caching)
+router.get("/", cache, async (req, res) => {
   try {
     let { studentId, isRead, page = 1, limit = 10 } = req.query;
 
-    // Convert values properly
     if (studentId) studentId = Number(studentId);
     if (isRead !== undefined) isRead = isRead === "true";
 
-    // Build query object
     const query = {};
     if (studentId) query.studentId = studentId;
     if (isRead !== undefined) query.isRead = isRead;
 
-    // Execute optimized query
     const notifications = await Notification.find(query)
-      .select("studentId type message isRead createdAt") // projection
-      .sort({ createdAt: -1 }) // latest first
+      .select("studentId type message isRead createdAt")
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
@@ -53,6 +52,9 @@ router.post("/", async (req, res) => {
       message,
     });
 
+    //  Clear cache after write
+    await client.flushAll();
+
     res.status(201).json({
       success: true,
       data: notification,
@@ -80,6 +82,9 @@ router.patch("/:id/read", async (req, res) => {
     notification.isRead = true;
     await notification.save();
 
+    //  Clear cache
+    await client.flushAll();
+
     res.status(200).json({
       success: true,
       message: "Marked as read",
@@ -96,6 +101,9 @@ router.patch("/:id/read", async (req, res) => {
 router.patch("/read-all", async (req, res) => {
   try {
     await Notification.updateMany({}, { isRead: true });
+
+    //  Clear cache
+    await client.flushAll();
 
     res.status(200).json({
       success: true,
