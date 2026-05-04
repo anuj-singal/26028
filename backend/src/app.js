@@ -1,0 +1,13 @@
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+const logger = require("./middleware/logger");
+app.use(logger);
+
+app.get("/", (req, res) => {
+  res.send("Server running");
+});
+
+module.exports = app;
